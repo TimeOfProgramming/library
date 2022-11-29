@@ -1,16 +1,18 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
-
+const fileMulter = require('../middleware/file')
+const path = require('path');
 class Book {
-    constructor(title = '', description='', authors='', favorite = '', fileCover = '', fileName = '', id = uuidv4()) {
+    constructor(title = '', description='', authors='', favorite = '', fileCover = '', fileName = '', fileBook, id = uuidv4()) {
       this.id = id,
       this.title = title,
       this.description = description,
       this.authors = authors,
       this.favorite = favorite,
       this.fileCover = fileCover,
-      this.fileName = fileName
+      this.fileName = fileName,
+      this.fileBook = fileBook
     }
   }
   
@@ -36,8 +38,21 @@ class Book {
       res.json('данные не найдены')
     }
   });
+
+  router.get('/:id/download', (req, res) => {
+    const { books } = store;
+    const { id } = req.params;
+    const idx = books.findIndex(item => item.id === id);
+
+    if (idx !== -1) {
+      res.download(path.join(__dirname, `../public/books/${books[idx].fileBook}`))
+    } else {
+      res.status(404);
+      res.json('данные не найдены')
+    }
+  });
   
-  router.post('/', (req, res) => {
+  router.post('/', fileMulter.single('book'), (req, res) => {
     const { books } = store;
     const {
       title, 
@@ -45,8 +60,14 @@ class Book {
       authors, 
       favorite, 
       fileCover, 
-      fileName
+      fileName,
     } = req.body;
+    
+    let fileInfo = '';
+
+    if (req.file) {
+      fileInfo = req.file?.filename;
+    }
   
     const newBook = new Book(
       title, 
@@ -54,7 +75,8 @@ class Book {
       authors, 
       favorite, 
       fileCover, 
-      fileName
+      fileName,
+      fileBook = fileInfo,
     );
   
     books.push(newBook);
