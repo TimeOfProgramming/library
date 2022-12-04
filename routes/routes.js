@@ -31,6 +31,83 @@ const store = {
   books: [],
 };
 
+router.get('/index', (_, res) => {
+  const { books } = store;
+  res.render('book/index', {
+    title: 'Список всех книг',
+    books,
+  });
+});
+
+router.get('/view/:id', (req, res) => {
+  const { books } = store;
+  const { id } = req.params;
+  const idx = books.findIndex((item) => item.id === id);
+
+  if (idx !== -1) {
+    res.render('book/view', {
+      title: 'Информация по конкретной книге',
+      book: books[idx],
+    });
+  } else {
+    res.status(404);
+    res.json('данные не найдены');
+  }
+});
+
+router.get('/create', (req, res) => {
+  res.render('book/create', {
+    title: 'Создание книги',
+  });
+});
+
+router.post('/create', (req, res) => {
+  const { books } = store;
+  const { title, description, author } = req.body;
+
+  const newBook = new Book(title, description, author);
+
+  books.push(newBook);
+  res.redirect('index');
+});
+
+router.get('/update/:id', (req, res) => {
+  const { books } = store;
+  const { id } = req.params;
+  const idx = books.findIndex((item) => item.id === id);
+  const currentBook = books[idx];
+
+  if (idx !== -1) {
+    res.render('book/update', {
+      title: 'Обновление книги',
+      book: currentBook,
+    });
+  } else {
+    res.status(404);
+    res.json('данные не найдены');
+  }
+});
+
+router.post('/update/:id', (req, res) => {
+  const { books } = store;
+  const { title, description, author } = req.body;
+  const { id } = req.params;
+
+  const idx = books.findIndex((item) => item.id === id);
+
+  if (idx !== -1) {
+    books[idx] = {
+      ...books[idx],
+      title,
+      description,
+      author,
+    };
+  } else {
+    res.status(404);
+    res.json('данные не найдены');
+  }
+});
+
 router.get('/', (_, res) => {
   const { books } = store;
   res.json(books);
