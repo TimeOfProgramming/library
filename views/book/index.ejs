@@ -1,0 +1,11 @@
+<%- include('../port/layout-start', {title: title}) %>
+<ul>
+  <% if (!books.length) {%>
+    <h2>Список книг пуст, добавьте книгу %></h2>
+    <%} else {%>
+    <% books.map((item) => {%>
+      <li><%= !item.title ? 'нет названия книги' : item.title %> <a href="update/<%= item.id %>"> редактировать</a></li>
+    <%}) %>
+    <% }%>
+</ul>
+<%- include('../port/layout-end') %>

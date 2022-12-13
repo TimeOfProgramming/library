@@ -1,0 +1,9 @@
+<%- include('../port/layout-start', {title: title}) %>
+<h2>Редактировать книгу</h2>
+<form method="POST">
+    имя: <input type="text" name="title" value="<%= book.title %>">
+    описание: <input type="text" name="description" value="<%= book.description %>">
+    автор: <input type="text" name="author" value="<%= book.authors %>">
+    <button type="submit">Обновить</button>
+</form>
+<%- include('../port/layout-end') %>

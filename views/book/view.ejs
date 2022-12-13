@@ -1,0 +1,5 @@
+<%- include('../port/layout-start', {title: title}) %>
+<p>title: <%= !book.title ? 'нет информации' : book.title %></p>
+<p>description: <%= !book.description ? 'нет информации' : book.description %></p>
+<p>authors: <%= !book.authors ? 'нет информации' : book.authors  %></p>
+<%- include('../port/layout-end') %>
