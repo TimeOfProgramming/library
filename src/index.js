@@ -4,14 +4,13 @@ const indexRouter = require('./routes/routes');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded());
+app.set('views', './src/views');
 app.set('view engine', 'ejs');
 
 app.use('/api/books', indexRouter);
 
 app.get('/', (_, res) => {
-  res.render('index', {
-    title: 'главная',
-  });
+  res.json('главная мега страница');
 });
 
 app.post('/api/user/login', (_, res) => {
