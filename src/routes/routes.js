@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
@@ -28,7 +30,16 @@ class Book {
 }
 
 const store = {
-  books: [],
+  books: [
+    {
+      id: '1',
+      title: 'test',
+    },
+    {
+      id: '2',
+      title: 'test',
+    },
+  ],
 };
 
 router.get('/index', (_, res) => {
@@ -45,9 +56,14 @@ router.get('/view/:id', (req, res) => {
   const idx = books.findIndex((item) => item.id === id);
 
   if (idx !== -1) {
-    res.render('book/view', {
-      title: 'Информация по конкретной книге',
-      book: books[idx],
+    // res.render('book/view', {
+    //   title: 'Информация по конкретной книге',
+    //   book: books[idx],
+    // });
+    axios.post(`http://counter:3001/counter/${id}/incr`).then(() => {
+      axios.get(`http://counter:3001/counter/${id}`).then((response) => {
+        res.json({ count: response.data });
+      });
     });
   } else {
     res.status(404);

@@ -1,0 +1,9 @@
+services:
+  counter:
+    image: timeofprogramming/counter
+  library:
+    image: timeofprogramming/library
+    environment:
+      - PORT=3002
+    ports:
+      - 80:3002
