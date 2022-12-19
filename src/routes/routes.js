@@ -7,6 +7,9 @@ const router = express.Router();
 const path = require('path');
 const fileMulter = require('../middleware/file');
 
+const SERVICE_COUNTER = process.env.COUNTER_SERVICE;
+const PORT_COUNTER = process.env.COUNTER_PORT;
+
 class Book {
   constructor(
     title = '',
@@ -56,15 +59,22 @@ router.get('/view/:id', (req, res) => {
   const idx = books.findIndex((item) => item.id === id);
 
   if (idx !== -1) {
-    // res.render('book/view', {
-    //   title: 'Информация по конкретной книге',
-    //   book: books[idx],
-    // });
-    axios.post(`http://counter:3001/counter/${id}/incr`).then(() => {
-      axios.get(`http://counter:3001/counter/${id}`).then((response) => {
-        res.json({ count: response.data });
+    axios
+      .post(`http://${SERVICE_COUNTER}:${PORT_COUNTER}/counter/${id}/incr`)
+      .then(() => {
+        axios
+          .get(`http://${SERVICE_COUNTER}:${PORT_COUNTER}/counter/${id}`)
+          .then((response) => {
+            res.render('book/view', {
+              title: 'Информация по конкретной книге',
+              book: books[idx],
+              count: response.data,
+            });
+          })
+          .catch((error) => {
+            res.json(error);
+          });
       });
-    });
   } else {
     res.status(404);
     res.json('данные не найдены');
