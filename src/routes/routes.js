@@ -1,57 +1,110 @@
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
 const path = require('path');
 const fileMulter = require('../middleware/file');
-
-class Book {
-  constructor(
-    title = '',
-    description = '',
-    authors = '',
-    favorite = '',
-    fileCover = '',
-    fileName = '',
-    fileBook,
-    id = uuidv4(),
-  ) {
-    this.id = id;
-    this.title = title;
-    this.description = description;
-    this.authors = authors;
-    this.favorite = favorite;
-    this.fileCover = fileCover;
-    this.fileName = fileName;
-    this.fileBook = fileBook;
-  }
-}
+const BookShema = require('../models/book');
 
 const store = {
   books: [],
 };
 
-router.get('/index', (_, res) => {
-  const { books } = store;
-  res.render('book/index', {
-    title: 'Список всех книг',
-    books,
-  });
+router.get('/', async (_, res) => {
+  try {
+    const books = await BookShema.find().select('-__v');
+    res.json(books);
+  } catch (e) {
+    res.status(500).json(e);
+  }
 });
 
-router.get('/view/:id', (req, res) => {
-  const { books } = store;
+router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  const idx = books.findIndex((item) => item.id === id);
+  try {
+    const book = await BookShema.findById(id).select('-__v');
+    res.json(book);
+  } catch (e) {
+    res.status(404).json(e);
+  }
+});
 
-  if (idx !== -1) {
+router.post('/', fileMulter.single('book'), async (req, res) => {
+  const { title, description, authors, favorite, fileCover, fileName } =
+    req.body;
+
+  let fileInfo = '';
+
+  if (req.file) {
+    fileInfo = req.file?.filename;
+  }
+
+  const newBook = new BookShema({
+    title,
+    description,
+    authors,
+    favorite,
+    fileCover,
+    fileName,
+    fileInfo,
+  });
+
+  try {
+    const book = await newBook.save();
+    res.json(book);
+  } catch (e) {
+    res.status(404).json(e);
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const { title, description, authors, favorite, fileCover, fileName } =
+    req.body;
+
+  let fileInfo = '';
+
+  if (req.file) {
+    fileInfo = req.file?.filename;
+  }
+
+  try {
+    await BookShema.findByIdAndUpdate(id, {
+      title,
+      description,
+      authors,
+      favorite,
+      fileCover,
+      fileName,
+      fileInfo,
+    });
+    res.json('данные обновлены');
+  } catch (e) {
+    res.status(404).json(e);
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await BookShema.deleteOne({ _id: id });
+    res.json('ok');
+  } catch (e) {
+    res.status(500).json(e);
+  }
+});
+
+router.get('/view/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const book = await BookShema.findById(id).select('-__v');
     res.render('book/view', {
       title: 'Информация по конкретной книге',
-      book: books[idx],
+      book,
     });
-  } else {
-    res.status(404);
-    res.json('данные не найдены');
+  } catch (e) {
+    res.status(500).json(e);
   }
 });
 
@@ -61,68 +114,62 @@ router.get('/create', (req, res) => {
   });
 });
 
-router.post('/create', (req, res) => {
-  const { books } = store;
-  const { title, description, author } = req.body;
+router.post('/create', async (req, res) => {
+  const { title, description, authors } = req.body;
 
-  const newBook = new Book(title, description, author);
+  const newBook = new BookShema({
+    title,
+    description,
+    authors,
+  });
 
-  books.push(newBook);
-  res.redirect('index');
+  try {
+    await newBook.save();
+    res.redirect('index');
+  } catch (e) {
+    res.status(404).json(e);
+  }
 });
 
-router.get('/update/:id', (req, res) => {
-  const { books } = store;
+router.get('/update/:id', async (req, res) => {
   const { id } = req.params;
-  const idx = books.findIndex((item) => item.id === id);
-  const currentBook = books[idx];
 
-  if (idx !== -1) {
+  try {
+    const book = await BookShema.findById(id);
     res.render('book/update', {
       title: 'Обновление книги',
-      book: currentBook,
+      book,
     });
-  } else {
-    res.status(404);
-    res.json('данные не найдены');
+  } catch (e) {
+    res.status(404).json(e);
   }
 });
 
-router.post('/update/:id', (req, res) => {
-  const { books } = store;
-  const { title, description, author } = req.body;
+router.post('/update/:id', async (req, res) => {
   const { id } = req.params;
 
-  const idx = books.findIndex((item) => item.id === id);
+  const { title, description, authors, favorite, fileCover, fileName } =
+    req.body;
 
-  if (idx !== -1) {
-    books[idx] = {
-      ...books[idx],
+  let fileInfo = '';
+
+  if (req.file) {
+    fileInfo = req.file?.filename;
+  }
+
+  try {
+    await BookShema.findByIdAndUpdate(id, {
       title,
       description,
-      author,
-    };
-  } else {
-    res.status(404);
-    res.json('данные не найдены');
-  }
-});
-
-router.get('/', (_, res) => {
-  const { books } = store;
-  res.json(books);
-});
-
-router.get('/:id', (req, res) => {
-  const { books } = store;
-  const { id } = req.params;
-  const idx = books.findIndex((item) => item.id === id);
-
-  if (idx !== -1) {
-    res.json(books[idx]);
-  } else {
-    res.status(404);
-    res.json('данные не найдены');
+      authors,
+      favorite,
+      fileCover,
+      fileName,
+      fileInfo,
+    });
+    res.json('данные обновлены');
+  } catch (e) {
+    res.status(500).json(e);
   }
 });
 
@@ -135,72 +182,6 @@ router.get('/:id/download', (req, res) => {
     res.download(
       path.join(__dirname, `../public/books/${books[idx].fileBook}`),
     );
-  } else {
-    res.status(404);
-    res.json('данные не найдены');
-  }
-});
-
-router.post('/', fileMulter.single('book'), (req, res) => {
-  const { books } = store;
-  const { title, description, authors, favorite, fileCover, fileName } =
-    req.body;
-
-  let fileInfo = '';
-
-  if (req.file) {
-    fileInfo = req.file?.filename;
-  }
-
-  const newBook = new Book(
-    title,
-    description,
-    authors,
-    favorite,
-    fileCover,
-    fileName,
-    fileInfo,
-  );
-
-  books.push(newBook);
-  res.json(newBook);
-});
-
-router.put('/:id', (req, res) => {
-  const { books } = store;
-  const { id } = req.params;
-
-  const { title, description, authors, favorite, fileCover, fileName } =
-    req.body;
-
-  const idx = books.findIndex((item) => item.id === id);
-
-  if (idx !== -1) {
-    books[idx] = {
-      ...books[idx],
-      title,
-      description,
-      authors,
-      favorite,
-      fileCover,
-      fileName,
-    };
-    res.json(books[idx]);
-  } else {
-    res.status(404);
-    res.json('данные не найдены');
-  }
-});
-
-router.delete('/:id', (req, res) => {
-  const { books } = store;
-  const { id } = req.params;
-
-  const idx = books.findIndex((item) => item.id === id);
-
-  if (idx !== -1) {
-    books.splice(idx, 1);
-    res.json('ok');
   } else {
     res.status(404);
     res.json('данные не найдены');
