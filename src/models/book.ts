@@ -1,6 +1,7 @@
-const { Schema, model } = require('mongoose');
+import { Schema, model } from 'mongoose';
+import { IBook } from '../types/types';
 
-const bookSchema = new Schema({
+const bookSchema = new Schema<IBook>({
   id: {
     type: String,
   },

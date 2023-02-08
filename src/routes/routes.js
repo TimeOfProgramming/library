@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fileMulter = require('../middleware/file');
-const BookShema = require('../models/book');
+const BookShema = require('../models/book.ts');
 
 const store = {
   books: [],
